@@ -1,0 +1,49 @@
+name: Build & Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT }}
+
+      - name: Configure Docker for gcloud
+        run: |
+          gcloud auth configure-docker --quiet
+
+      - name: Build container image
+        env:
+          IMAGE: gcr.io/${{ secrets.GCP_PROJECT }}/${{ github.repository }}/$GITHUB_RUN_ID
+        run: |
+          IMAGE=gcr.io/${{ secrets.GCP_PROJECT }}/${{ github.repository }}:${{ github.run_id }}
+          docker build -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Deploy to Cloud Run
+        env:
+          IMAGE: gcr.io/${{ secrets.GCP_PROJECT }}/${{ github.repository }}:${{ github.run_id }}
+        run: |
+          IMAGE=gcr.io/${{ secrets.GCP_PROJECT }}/${{ github.repository }}:${{ github.run_id }}
+          gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE }} \
+            --image $IMAGE \
+            --platform managed \
+            --region ${{ secrets.CLOUD_RUN_REGION }} \
+            --allow-unauthenticated \
+            --quiet
+
+      - name: Output service URL
+        run: |
+          gcloud run services describe ${{ secrets.CLOUD_RUN_SERVICE }} --platform managed --region ${{ secrets.CLOUD_RUN_REGION }} --format "value(status.url)"

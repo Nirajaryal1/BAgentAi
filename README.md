@@ -98,47 +98,7 @@ Or, if you must keep a local branch, follow advanced instructions (I can provide
 
 This repo is a standard Next.js app and can be deployed to Vercel, Netlify, or similar. For Vercel, connect the GitHub repo and set any environment variables in the Vercel dashboard.
 
-## Deploy to Google Cloud Run (preview link)
-
-You can deploy this app to Google Cloud Run and get a public preview URL. I added a `Dockerfile` and a GitHub Actions workflow at `.github/workflows/deploy-cloud-run.yml` that will build a container image and deploy it to Cloud Run when you push to `main` (or run the workflow manually).
-
-What I added:
-- `Dockerfile` — builds the Next.js production app and runs `next start` on port `8080`.
-- `.github/workflows/deploy-cloud-run.yml` — GitHub Actions workflow that authenticates with GCP and deploys to Cloud Run.
-
-What you need to set up in Google Cloud and GitHub (one-time):
-
-1. Create a GCP project (or choose an existing one).
-2. Enable the Cloud Run API and Container Registry (or Artifact Registry) in that project.
-3. Create a Cloud Run service name (e.g. `bagentai-preview`).
-4. Create a GCP service account with the `Cloud Run Admin`, `Storage Admin` (or `Artifact Registry Writer`), and `Service Account User` roles.
-5. Create and download a JSON key for that service account.
-
-GitHub repository secrets to add (Repository -> Settings -> Secrets -> Actions):
-- `GCP_PROJECT` — your GCP project id
-- `GCP_SA_KEY` — the **contents** of the service account JSON key (add as a secret)
-- `CLOUD_RUN_SERVICE` — name of the Cloud Run service (e.g. `bagentai-preview`)
-- `CLOUD_RUN_REGION` — region (e.g. `us-central1`)
-
-How it works after you add secrets:
-- Push to `main` (or run the workflow manually) and the workflow will:
-	- authenticate using `GCP_SA_KEY` and `GCP_PROJECT`
-	- build a Docker image, push it to `gcr.io/$GCP_PROJECT` and deploy to Cloud Run
-	- print the service URL in the workflow logs
-
-Quick local check (optional):
-
-```bash
-# Build and run locally with Docker
-docker build -t bagentai-local .
-docker run -p 8080:8080 bagentai-local
-# Open http://localhost:8080
-```
-
-Notes & tips:
-- The workflow allows unauthenticated access by default (`--allow-unauthenticated`) so you get a public preview URL. If you want auth, change the workflow flags.
-- If you prefer Artifact Registry instead of `gcr.io`, update the workflow image name and push commands accordingly.
-- If you'd like, I can add a second workflow to deploy preview branches to per-PR Cloud Run services (create-on-demand) — say the word and I will scaffold it.
+<!-- Cloud Run/Docker instructions removed per user request -->
 
 <!-- Firebase Hosting preview instructions removed per user request -->
 

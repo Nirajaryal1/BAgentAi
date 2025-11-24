@@ -140,6 +140,30 @@ Notes & tips:
 - If you prefer Artifact Registry instead of `gcr.io`, update the workflow image name and push commands accordingly.
 - If you'd like, I can add a second workflow to deploy preview branches to per-PR Cloud Run services (create-on-demand) — say the word and I will scaffold it.
 
+## Firebase Hosting preview (using `FIREBASE_TOKEN`)
+
+If you prefer Firebase Hosting preview channels (you mentioned you already added `FIREBASE_TOKEN`), I added a GitHub Actions workflow `.github/workflows/firebase-preview.yml` that tries to:
+
+- run `npm run build`,
+- run `npx next export` to produce a static `out/` folder, and
+- deploy `out/` to a Firebase Hosting preview channel using `firebase hosting:channel:deploy`.
+
+Important notes:
+- This workflow requires a `FIREBASE_PROJECT` repository secret (your Firebase project id) in addition to the `FIREBASE_TOKEN` you already added.
+- `next export` only works for statically-exportable Next.js apps. If your app uses App Router SSR or server-only features, `next export` will fail and the workflow will abort.
+- If your app cannot be statically exported, use the Cloud Run workflow above (it requires a GCP service account key). I can help create that key and add the required repo secrets.
+
+Set these GitHub Actions secrets:
+- `FIREBASE_TOKEN` — your Firebase CI token (you have this set)
+- `FIREBASE_PROJECT` — your Firebase project id
+
+Trigger the workflow by pushing to `main` or by opening a PR — on success the Actions logs will show the preview URL (and Firebase Hosting will list the channel URL).
+
+If you want, I can:
+- Detect App Router SSR usage and instead wire the repo to deploy the Docker image to Cloud Run from GitHub Actions (I will need GCP service account JSON), or
+- Add per-PR Cloud Run preview deployments (each PR gets an isolated Cloud Run service) — requires GCP credentials.
+
+
 ---
 
 ## Reintroducing Payments (Optional)
